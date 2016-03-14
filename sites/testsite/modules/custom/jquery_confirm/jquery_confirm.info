@@ -1,0 +1,6 @@
+name = "Jquery Confirm popup"
+description = "Adds simple Javascript confirmation pop-up to node add page for navigating away without saving data or submitting it."
+core = 7.x
+package = 'Custom'
+version = "7.x-1.0"
+

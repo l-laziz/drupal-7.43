@@ -1,0 +1,34 @@
+<?php
+/**
+ * Invoked if a user is subscribed to a newsletter.
+ *
+ * @param $subscriber
+ *   The subscriber object including all subscriptions of this user.
+ *
+ * @param $subscription
+ *   The subscription object for this specific subscribe action.
+ *
+ * @ingroup subscriber
+ */
+
+function simplenews_subscribe_simplenews_subscribe_user($subscriber, $subscription) {
+	$subscription->status = SIMPLENEWS_SUBSCRIPTION_STATUS_SUBSCRIBED;
+	print('Helooooo');
+
+  dpm($subscription);
+// if ($confirm) {
+//     // Create an unconfirmed subscription object if it doesn't exist yet.
+//     if (!isset($subscriber->tids[$tid])) {
+//       $subscription = new stdClass();
+//       $subscription->snid = $subscriber->snid;
+//       $subscription->tid = $tid;
+//       $subscription->status = SIMPLENEWS_SUBSCRIPTION_STATUS_SUBSCRIBED;
+//       $subscription->timestamp = REQUEST_TIME;
+//       $subscription->source = $source;
+//       simplenews_subscription_save($subscription);
+//       $subscriber->newsletter_subscription[$tid] = $subscription;
+//     }
+
+//     simplenews_confirmation_send('subscribe', $subscriber, simplenews_category_load($tid));
+//   }
+}

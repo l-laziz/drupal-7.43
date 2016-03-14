@@ -1,0 +1,8 @@
+name = Member survey
+description = Custom module task assignment for Adfero.
+package = "Custom"
+core = 7.x
+version = "7.x-1.0"
+
+
+files[] = member_survey.module

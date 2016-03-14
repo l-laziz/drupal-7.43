@@ -1,0 +1,41 @@
+<?php
+function adfero_test_schema() {
+  $schema['adfero_table'] = array(
+    'description' => t('The base table for submitted data.'),
+    'fields' => array(
+      'name' => array(
+        'description' => 'name',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'last_name' => array(
+        'description' => 'last_name',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+
+      'email' => array(
+        'description' => 'email',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'country' => array(
+        'description' => 'country',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+  );
+  return $schema;
+}
+
+
+

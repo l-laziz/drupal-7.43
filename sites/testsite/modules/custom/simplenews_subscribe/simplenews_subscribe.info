@@ -1,0 +1,6 @@
+name = Subsribe to Simplenews
+description = Custom module for Simplenews for auto subscription without confirmation
+package = "Custom"
+core = 7.x
+version = "7.x-1.0"
+core = "7.x"

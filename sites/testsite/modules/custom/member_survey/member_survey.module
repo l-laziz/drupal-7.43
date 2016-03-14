@@ -1,0 +1,71 @@
+<?php
+
+function member_survey_menu() {
+
+  $items['member-survey'] = array(
+    'title' => t('Member Survey'),
+    'page callback' => 'member_survey_form',
+    'access arguments' => array('access content'),
+  );
+  return $items;
+
+}
+
+function member_survey_form() {
+
+    $output = drupal_get_form('member_survey_my_form');
+    return $output;
+}
+
+function member_survey_my_form($form_state){
+    # the options to display in our form radio buttons
+    $options1 = array(
+      'Strongly Agree' => t('Strongly Agree'),
+      'Agree' => t('Agree'), 
+      'Neutral' => t('Neutral'),
+      'Disagree' => t('Disagree'),
+      'Strongly Disagree' => t('Strongly Disagree'),
+    );
+
+    # the options to display in our form radio buttons
+    $options2 = array(
+      'Very Satisfied ' => t('Very Satisfied '),
+      'Satisfied' => t('Satisfied '), 
+      'Neither Satisfied or Dissatisfied' => t('Neither Satisfied or Dissatisfied'),
+      'Dissatisfied ' => t('Dissatisfied '),
+      'Very Dissatisfied ' => t('Very Dissatisfied '),
+    );
+
+    $form['knowledgable'] = array(
+      '#type' => 'radios',
+      '#title' => t('Question 1'),
+      '#options' => $options1,
+      //'#default_value' => $options['Neutral'],
+    );
+
+    $form['satisfied'] = array(
+      '#type' => 'radios',
+      '#title' => t('Question 4'),
+      '#options' => $options2,
+      //'#default_value' => $options['Neutral'],
+    );
+
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+    );
+
+  return $form;
+}
+
+// Validate the form submission
+function member_survey_my_form_validate($form, &$form_state){
+    if(empty($form_state['values']['knowledgable']) ||
+        empty($form_state['values']['satisfied']) 
+    ){
+        form_set_error('knowledgable',t('Please respond to all questions, thank you!'));
+    }
+
+} 
+
+?>

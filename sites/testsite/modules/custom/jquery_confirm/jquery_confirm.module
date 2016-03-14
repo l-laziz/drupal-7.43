@@ -1,0 +1,94 @@
+<?php
+
+/**
+*Implements hook_init();
+*Loads all noncached pages.
+*/
+function jquery_confirm_init() {
+	//Converts the form field input value to lowercase.
+	$pages = drupal_strtolower(variable_get('jquery_confirm_pages', ""));
+
+	//Get the current path.
+	$current_path = current_path();
+
+	//Get the current path alias.
+	$current_alias = drupal_get_path_alias($current_path);
+
+	//Converts the Drupal path alias to lowercase.
+	$alias_path = drupal_strtolower($current_alias);
+
+	//Check if the page alias matches the path in the form field.
+	$page_match = drupal_match_path($alias_path, $pages);
+
+	//If the alias path is not the same as the current path,
+	// run a check with current path.
+	if ($alias_path !=$current_path) {
+		$page_match = $page_match || drupal_match_path($current_path, $pages);
+	}
+
+	//Default FALSE gives a fallback.
+	$node_edit_match = FALSE;
+		if (arg(0) =='node' && arg(2) == 'edit') {
+		//Gets full node object from the URL.
+		$node = menu_get_object();
+		if (in_array($node->type, variable_get('jquery_confirm_content_type_edit', array()))) {
+			$node_edit_match = TRUE;
+		}
+	}
+
+	//Implements onclick Javascript function with 
+	//condtion that ".form-submit" button was not pressed.
+	if($page_match || $node_edit_match) {
+		drupal_add_js("jQuery(document).ready(function () { 
+			jQuery('.form-submit').click(function(e){
+				window.form_submit = true;
+			});
+
+			jQuery(window).bind('beforeunload', function() {
+				if (!window.form_submit) {
+					return 'The information entered is not saved.';
+				}
+			});
+		});", 'inline');
+	}
+}
+
+/**
+*Implements hook_menu();
+*
+*/
+function jquery_confirm_menu() {
+  $items ['admin/config/user-interface/jQuery popup'] = array(
+    'title' => 'jQuery confirm',
+    'description' => 'Administer jQuery confirm popup window settings',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('access administration pages'),
+    'page arguments' => array('jquery_confirm_settings_form'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+   return $items;
+}
+
+/**
+*Implements administration form with hook_form();
+*
+*/
+function jquery_confirm_settings_form($form, &$form_settings) {
+	$form['jquery_confirm_pages'] = array(
+		'#type' => 'textarea',
+		'#title' => t('jQuery Confirm Pages'),
+		'#default_value' => variable_get('jquery_confirm_pages',''),
+		'#description' => t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. <front> is the front page."),
+		);
+
+	$form['jquery_confirm_content_type_edit'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Select content type'),
+		'#default_value' => variable_get('jquery_confirm_content_type_edit', array()),
+		'#description' => t("Specify types of content to show popup window on"),
+		//Returns the list of available node types.
+		'#options' => node_type_get_names(),
+	);
+
+	return system_settings_form($form);
+}
