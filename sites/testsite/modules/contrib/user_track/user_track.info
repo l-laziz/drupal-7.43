@@ -1,0 +1,6 @@
+name = User Track
+description = "Tracks user's IP Address, Access Time, Agent, Login Status."
+package = Administration
+core = 7.x
+configure = admin/config/user-track
+dependencies[] = views

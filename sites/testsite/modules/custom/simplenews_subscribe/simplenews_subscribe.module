@@ -1,34 +1,38 @@
 <?php
+function simplenews_confirm_subscription($op1 = NULL, $op2 = NULL) {
+$md5 = drupal_substr($op2, 0, 10);
+list($snid, $tid) = explode(‘t’, drupal_substr($op2, 10));
+
+$result = db_query(‘SELECT snid, mail FROM {simplenews_subscriptions} WHERE snid = %d’, $snid);
+if (!($subs = db_fetch_object($result))) {
+drupal_not_found();
+return;
+}
+
+if ($md5 == drupal_substr(md5($subs->mail . simplenews_private_key()), 0, 10)) {
+$newsletter = taxonomy_get_term($tid);
+if ($op1 == ‘remove’) {
+return drupal_get_form(‘simplenews_confirm_removal_form’, $subs->mail, $newsletter);
+}
+elseif ($op1 == ‘add’) {
+//Changed by Sumaiya on 7thApr2011 to remove double subscription
+return drupal_get_form(‘simplenews_confirm_add_form’, $subs->mail, $newsletter);
+}
+}
+
+// If md5 didn’t match, do a not found.
+drupal_not_found();
+return;
+}
+
 /**
- * Invoked if a user is subscribed to a newsletter.
- *
- * @param $subscriber
- *   The subscriber object including all subscriptions of this user.
- *
- * @param $subscription
- *   The subscription object for this specific subscribe action.
- *
- * @ingroup subscriber
- */
+* Generate the confirm subscription form.
+*
+* @see simplenews_confirm_add_form_submit()
+*/
+function simplenews_confirm_add_form(&$form_state, $mail, $newsletter) {
+//Changed to remove double subscription
+simplenews_subscribe_user($mail, $newsletter->tid, FALSE);
 
-function simplenews_subscribe_simplenews_subscribe_user($subscriber, $subscription) {
-	$subscription->status = SIMPLENEWS_SUBSCRIPTION_STATUS_SUBSCRIBED;
-	print('Helooooo');
-
-  dpm($subscription);
-// if ($confirm) {
-//     // Create an unconfirmed subscription object if it doesn't exist yet.
-//     if (!isset($subscriber->tids[$tid])) {
-//       $subscription = new stdClass();
-//       $subscription->snid = $subscriber->snid;
-//       $subscription->tid = $tid;
-//       $subscription->status = SIMPLENEWS_SUBSCRIPTION_STATUS_SUBSCRIBED;
-//       $subscription->timestamp = REQUEST_TIME;
-//       $subscription->source = $source;
-//       simplenews_subscription_save($subscription);
-//       $subscriber->newsletter_subscription[$tid] = $subscription;
-//     }
-
-//     simplenews_confirmation_send('subscribe', $subscriber, simplenews_category_load($tid));
-//   }
+drupal_set_message(t(‘%user was added to the %newsletter mailing list.’, array(‘%user’ => $mail, ‘%newsletter’ => $newsletter->name)));
 }

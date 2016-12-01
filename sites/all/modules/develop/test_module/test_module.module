@@ -1,0 +1,60 @@
+<?php
+function test_module_tokens_alter(array &$replacements, array $context) {
+  if ($context['type'] == 'basic_cart_order') {
+    $new = '';
+    $cart = basic_cart_get_cart();
+            
+    // Building the order details.
+    $i = 0;
+    $products = '';
+      foreach ($cart as $nid => $node) {
+        $new .= ++$i . '. ' . $node->title . "\n" ;
+      }
+    $replacements['[basic_cart_order:products]']=$new;
+
+  }
+}
+/**
+ * Implements hook_mail_alter().
+ */
+function test_module_mail_alter(&$message) {
+  if ($message['id'] == 'basic_cart_order_admin_mail' || 'basic_cart_order_user_mail') {
+    // dpm($message);
+    $message['from'] = $message['headers']['From'] = 'email@sample.com';
+
+
+    $message_subject = t(variable_get('basic_cart_admin_subject'));
+    // dpm($message_subject);
+// Token data.
+  // $data = array('node' => $order);
+
+    $node = node_load('7');
+  $message_subject = token_replace($message_subject, array('node'=>$node));
+ // dpm($message_subject, 'Tokenized:');
+    // $message['subject'] = $message_subject;
+  }
+}
+
+
+function test_module_basic_cart_order($order){
+  drupal_set_message("Hello from Cart hook", 'warning');
+}
+     
+   //if ($type == 'basic_cart_order') {
+   // dpm($tokens['products']);
+   // dpm($type);
+   // 
+   // 
+   // foreach ($cart as $nid => $node) {
+   //     dpm( $node->title);
+   // }
+   //}
+  //if ($message['id'] == 'modulename_messagekey') {
+  //  if (!example_notifications_optin($message['to'], $message['id'])) {
+  //    // If the recipient has opted to not receive such messages, cancel
+  //    // sending.
+  //    $message['send'] = FALSE;
+  //    return;
+  //  }
+  //  $message['body'][] = "--\nMail sent out from " . variable_get('site_name', t('Drupal'));
+  //}

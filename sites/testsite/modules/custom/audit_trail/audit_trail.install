@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Schema, install and uninstall functions for user track module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function audit_trail_schema() {
+  $schema['audit_trail'] = array(
+    'description' => 'Stores User Tracking Information.',
+    'fields' => array(
+      'lid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique ID.',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => TRUE,
+        'description' => 'User username.',
+        'default' => '',
+      ),
+      'access' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp for previous time user accessed the site.',
+      ),
+      'ip' => array(
+        'type' => 'varchar',
+        'length' => 15,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'IP Address.',
+      ),
+      'success'  => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => TRUE,
+        'description' => 'Whether the login is succees or failed.',
+      ),
+    ),
+    'indexes' => array(
+      'name' => array('name'),
+      'ip' => array('ip'),
+    ),
+    'primary key' => array('lid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function audit_trail_uninstall() {
+  variable_del('audit_trail_ip_address');
+  variable_del('audit_trail_send_email');
+  variable_del('audit_trail_emails');
+}

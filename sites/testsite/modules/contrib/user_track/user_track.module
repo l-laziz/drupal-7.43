@@ -1,0 +1,139 @@
+<?php
+
+/**
+ * @file
+ * Tracks registered users statistics.
+ */
+
+/**
+ * Implements hook_views_api().
+ */
+function user_track_views_api() {
+  return array(
+    'api' => views_api_version(),
+    'path' => drupal_get_path('module', 'user_track') . '/views',
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function user_track_permission() {
+  return array(
+    'user track' => array(
+      'title' => t('User track permissions.'),
+      'decription' => t('Allow only selected users to track the users.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function user_track_user_login(&$edit, $account) {
+  $insert = db_insert('user_track')->fields(array('uid', 'access', 'agent', 'success', 'ip'));
+  if (variable_get('user_track_ip_address')) {
+    $user_track = $insert->values(array(
+      'uid' => $account->uid,
+      'access' =>  REQUEST_TIME,
+      'agent' => $_SERVER['HTTP_USER_AGENT'],
+      'success' => 'success',
+      'ip' => ip_address(),
+      ));
+  }
+  else {
+    $user_track = $insert->values(array(
+      'uid' => $account->uid,
+      'access' =>  REQUEST_TIME,
+      'agent' => $_SERVER['HTTP_USER_AGENT'],
+      'success' => 'success',
+      'ip' => '',
+    ));
+  }
+  $user_track->execute();
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function user_track_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'user_login' || $form_id == 'user_login_block') {
+    $form['#validate'][] = 'user_track_validate';
+  }
+  if (isset($form_state['view'])) {
+    if ($form_state['view']->name == 'user_track') {
+      $form['success'] = array(
+        '#type' => 'select',
+        '#options' => array('' => t('All'), 'failed' => t('Failed'), 'success' => t('Success')),
+        '#default_value' => '',
+      );
+      $form['ip']['#description'] = t('Enter first few digits of the IP Address.');
+      $form['ip']['#size'] = 15;
+      $form['ip']['#maxlength'] = 15;
+      $form['submit']['#value'] = t('Filter');
+    }
+  }
+}
+
+/**
+ * Validation function to check successful or failed login.
+ */
+function user_track_validate($form, $form_state) {
+  $name = $form_state['values']['name'];
+  $password = trim($form_state['values']['pass']);
+
+  if (!empty($name) && !empty($password)) {
+    if (!user_authenticate($name, $password)) {
+      $query = db_query("SELECT uid FROM {users} WHERE name = :name AND status = 1",
+        array(':name' => $name))->fetchObject();
+      if (!empty($query)) {
+        $insert = db_insert('user_track')->fields(array('uid', 'access', 'agent', 'success', 'ip'));
+        if (variable_get('user_track_ip_address')) {
+          $user_track = $insert->values(array(
+            'uid' => $query->uid,
+            'access' => REQUEST_TIME,
+            'agent' => $_SERVER['HTTP_USER_AGENT'],
+            'success' => 'failed',
+            'ip' => ip_address(),
+          ));
+        }
+        else {
+          $user_track = $insert->values(array(
+            'uid' => $query->uid,
+            'access' => REQUEST_TIME,
+            'agent' => $_SERVER['HTTP_USER_AGENT'],
+            'success' => 'failed',
+            'ip' => '',
+          ));
+        }
+        $user_track->execute();
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function user_track_menu() {
+  $items['admin/config/user-track'] = array(
+    'title' => 'User Track',
+    'description' => 'Adjust user track options.',
+    'position' => 'right',
+    'weight' => -5,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/config/user-track/settings'] = array(
+    'title' => 'User Track settings',
+    'description' => 'Set the user tracking parameters.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_track_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'user_track.admin.inc',
+  );
+  return $items;
+}

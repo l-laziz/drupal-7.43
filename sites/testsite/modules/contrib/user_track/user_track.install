@@ -1,0 +1,90 @@
+<?php
+
+/**
+ * @file
+ * Schema, install and uninstall functions for user track module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function user_track_schema() {
+  $schema['user_track'] = array(
+    'description' => 'Stores User Tracking Information.',
+    'fields' => array(
+      'lid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique ID.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique ID of the user logging in.',
+      ),
+      'access' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp for previous time user accessed the site.',
+      ),
+      'ip' => array(
+        'type' => 'varchar',
+        'length' => 15,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'IP Address.',
+      ),
+      'agent' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Browser used by the user.',
+      ),
+      'success'  => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'description' => 'Whether the login is succees or failed.',
+      ),
+    ),
+    'indexes' => array(
+      'uid' => array('uid'),
+      'ip' => array('ip'),
+    ),
+    'primary key' => array('lid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_disable().
+ */
+function user_track_disable() {
+  module_load_include('inc', 'user_track', 'views/user_track.views_default');
+  $default_views = array_keys(module_invoke('user_track', 'views_default_views'));
+  $views_status = variable_get('views_defaults', array());
+  foreach ($default_views as $default_view) {
+    $views_status[$default_view] = TRUE;
+  }
+  variable_set('views_defaults', $views_status);
+  views_invalidate_cache();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function user_track_uninstall() {
+  variable_del('user_track_ip_address');
+}
+
+/**
+ * Implements hook_install().
+ */
+function user_track_install() {
+  variable_set('user_track_ip_address', TRUE);
+}

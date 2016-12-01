@@ -1,0 +1,37 @@
+<?php
+function nidcd_book_expanded_data() {
+  $content = '';
+  $node = menu_get_object();
+  if(isset($node->book) && !empty($node->book['bid'])) {
+    $pid = $node->book['bid'];
+    $tree = menu_tree_all_data(book_menu_name($pid));
+    $data = array_shift($tree);
+    $data_below = menu_tree_output($data['below']);
+    $content = drupal_render($data_below);        
+  }
+
+  return $content;
+}
+
+
+
+function nidcd_book_expanded_block_info() {
+  $blocks['book_nav_block'] = array(
+    'info' => t('Book navigation block'),
+  );
+  $blocks['book_page_nav']= array(
+    'info' => t('Book page navigation'),
+  );
+    return $blocks;
+}
+
+function nidcd_book_expanded_block_view($delta = '') {
+  $block = array();
+  if($delta == 'book_nav_block') {
+      $block['content'] = nidcd_book_expanded_data();
+  }
+ else  if($delta == 'book_page_nav') {
+      $block['content'] = nidcd_book_expanded_data();
+  }
+  return $block;
+}

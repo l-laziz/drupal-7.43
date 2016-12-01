@@ -1,0 +1,129 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ * Define menu items and page callbacks.
+ *
+ * @return
+ *   An array of menu items.
+ */
+function audit_trail_menu() {
+  $items = array();
+  $items['admin/reports/audit-trail'] = array(
+    'title' => 'Audit Trail',
+    'description' => 'Reports and Settings.',
+    'position' => 'right',
+    'weight' => -5,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/reports/audit-trail/report'] = array(
+    'title' => 'Report',
+    'description' => 'Shows previous login information for site users.',
+    'page callback' => 'audit_trail_report_callback',
+    'access arguments' => array('administer users'),
+    'file' => 'audit_trail.admin.inc',
+  );
+  $items['admin/reports/audit-trail/settings'] = array(
+    'title' => 'Settings',
+    'description' => 'Set the user tracking parameters.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('audit_trail_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'audit_trail.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function audit_trail_user_login(&$edit, $account) {
+  $insert = db_insert('audit_trail')->fields(array('name', 'access', 'success', 'ip'));
+  if (variable_get('audit_trail_ip_address')) {
+    $audit_trail = $insert->values(array(
+      'name' => $account->name,
+      'access' =>  REQUEST_TIME,
+      'success' => 'Successful login',
+      'ip' => ip_address(),
+      ));
+  }
+  else {
+    $audit_trail = $insert->values(array(
+      'name' => $account->name,
+      'access' =>  REQUEST_TIME,
+      'success' => 'Successful login',
+      'ip' => 'Not tracking',
+    ));
+  }
+  $audit_trail->execute();
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function audit_trail_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'user_login' || $form_id == 'user_login_block') {
+    $form['#validate'][] = 'audit_trail_validate';
+  }
+}
+
+/**
+ * Validation function to check successful or failed login.
+ */
+function audit_trail_validate($form, &$form_state) {
+  $name = $form_state['values']['name'];
+  $password = trim($form_state['values']['pass']);
+
+  if (!empty($name) && !empty($password)) {
+    if (!user_authenticate($name, $password)) {
+      $query = db_query("SELECT name FROM {users} WHERE name = :name AND status = 1",
+        array(':name' => $name))->fetchObject();
+      if (!empty($query)) {
+        $insert = db_insert('audit_trail')->fields(array('name', 'access', 'success', 'ip'));
+        if (variable_get('audit_trail_ip_address')) {
+          $audit_trail = $insert->values(array(
+            'name' => $query->name,
+            'access' => REQUEST_TIME,
+            'success' => 'Failed due to wrong password',
+            'ip' => ip_address(),
+          ));
+        }
+        else {
+          $audit_trail = $insert->values(array(
+            'name' => $query->name,
+            'access' => REQUEST_TIME,
+            'success' => 'Failed due to wrong password',
+            'ip' => 'Not tracking',
+          ));
+        }
+        $audit_trail->execute();
+        
+        //Implementing drupal_mail() to send email when login fails.
+        $to = variable_get('audit_trail_emails');
+        $username = $query->name;
+        $params = array(
+                        'username' => $username,
+                        );
+        if(variable_get('audit_trail_send_email') == TRUE){
+          drupal_mail('audit_trail', 'mail_one', $to, language_default(), $params);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function audit_trail_mail($key, &$message, $params) {
+  switch($key) {
+    case 'mail_one':
+    $message['subject'] = t("Advisory Council Login Notification Email");
+    $message['body'][] = t("Login failed for user (@name) due to incorrect password.", array('@name' => $params['username']));
+    break;
+  }
+}
