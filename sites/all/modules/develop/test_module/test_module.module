@@ -30,8 +30,8 @@ function test_module_mail_alter(&$message) {
 
     $node = node_load('7');
   $message_subject = token_replace($message_subject, array('node'=>$node));
- // dpm($message_subject, 'Tokenized:');
-    // $message['subject'] = $message_subject;
+ dpm($message_subject, 'Tokenized:');
+    $message['subject'] = $message_subject;
   }
 }
 

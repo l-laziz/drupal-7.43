@@ -1,8 +1,13 @@
 About this directory
 --------------------
 
-This directory contains several ready-made Superfish styles.
+The Superfish block configuration form scans this directory (libraries/superfish/style) in order to
+create a list of the available Superfish styles in the the Superfish library.
 
-YOU SHOULD NOT edit these or any other file that is a part of the Superfish library.
+The recommended way of styling a Superfish mneu is doing it through the theme, but alternatively you
+can add your own self-made styles to this directory too, but this requires following this tiny rule:
 
-Please refer to THEMES.txt and THEMES_SCSS.txt for how you can add Superfish CSS to your theme.
+You can remove or add files to this directory, but YOU SHOULD NOT edit the files that are part of
+the Superfish library
+
+For more information, look at the SAMPLES directory and read the README too.
