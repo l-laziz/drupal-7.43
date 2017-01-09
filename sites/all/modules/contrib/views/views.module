@@ -2108,27 +2108,6 @@ function views_exposed_form_submit(&$form, &$form_state) {
   foreach ($form_state['values'] as $key => $value) {
     if (!in_array($key, $exclude)) {
       $form_state['view']->exposed_raw_input[$key] = $value;
-
-      // If we have a multiple checkbox with values set to zero, we don't want
-      // these included in the exposed_raw_input array as it breaks pagination.
-      if (is_array($value)) {
-        if (isset($form[$key])) {
-          $field = $form[$key];
-        }
-        else {
-          // The field may be placed in a fieldset so look 1 level deeper.
-          foreach (element_children($form) as $child) {
-            if (isset($form[$child][$key])) {
-              $field = $form[$child][$key];
-              break;
-            }
-          }
-        }
-
-        if (isset($field['#type']) && $field['#type'] === 'checkboxes') {
-          $form_state['view']->exposed_raw_input[$key] = array_filter($value);
-        }
-      }      
     }
   }
 }
